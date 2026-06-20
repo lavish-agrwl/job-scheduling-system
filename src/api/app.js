@@ -1,6 +1,7 @@
 import express from "express";
 import jobRoutes from "./routes/jobRoutes.js";
 import { NODE_ENV } from "../config/env.js";
+import serverAdapter from "./adminUI.js";
 
 const app = express();
 
@@ -24,6 +25,8 @@ app.use(requestLogger);
 
 // Routes
 app.use("/api/jobs", jobRoutes);
+// Admin UI for queues. Remove or auth-protect this route in production
+app.use("/admin/queues", serverAdapter.getRouter());
 
 // 404 handler
 app.use((req, res) => {
