@@ -2,6 +2,8 @@ import express from "express";
 import jobRoutes from "./routes/jobRoutes.js";
 import { NODE_ENV } from "../config/env.js";
 import serverAdapter from "./adminUI.js";
+import { updateQueueDepthMetrics } from "../utils/metrics.js";
+import { register } from "prom-client";
 
 const app = express();
 
@@ -27,6 +29,13 @@ app.use(requestLogger);
 app.use("/api/jobs", jobRoutes);
 // Admin UI for queues. Remove or auth-protect this route in production
 app.use("/admin/queues", serverAdapter.getRouter());
+
+// Metrics endpoint
+app.get("/metrics", async (req, res) => {
+  await updateQueueDepthMetrics();
+  res.set("Content-Type", register.contentType);
+  res.send(await register.metrics());
+});
 
 // 404 handler
 app.use((req, res) => {

@@ -1,11 +1,17 @@
-import { QueueEvents } from "bullmq";
+import { QueueEvents, Job as BullJob } from "bullmq";
 import Job from "../models/Job.js";
 import { redisSubscriber } from "../config/redis.js";
+import {
+  jobsSubmittedTotal,
+  jobsCompletedTotal,
+  jobsFailedTotal,
+} from "./metrics.js";
+import { imageQueue, reportQueue, emailQueue } from "../queues/index.js";
 
 let started = false;
 
-function attachListeners(queueName) {
-  const qe = new QueueEvents(queueName, { connection: redisSubscriber });
+function attachListeners(queue, type) {
+  const qe = new QueueEvents(queue.name, { connection: redisSubscriber });
 
   qe.on("waiting", async (event) => {
     const { jobId } = event;
@@ -18,6 +24,7 @@ function attachListeners(queueName) {
         },
         { upsert: true, new: true },
       );
+      jobsSubmittedTotal.inc({ type });
       console.log(`[sync] job ${jobId} → waiting`);
     } catch (err) {
       console.error(
@@ -57,6 +64,7 @@ function attachListeners(queueName) {
         },
         { new: true },
       );
+      jobsCompletedTotal.inc({ type });
       console.log(`[sync] job ${jobId} → completed`);
     } catch (err) {
       console.error(
@@ -79,7 +87,26 @@ function attachListeners(queueName) {
         },
         { new: true },
       );
-      console.log(`[sync] job ${jobId} → failed`);
+      // Determine if this was the final attempt by inspecting the Bull job
+      let finalAttempt = false;
+      try {
+        const bullJob = await BullJob.fromId(queue, jobId);
+        if (bullJob) {
+          const attemptsMade = bullJob.attemptsMade ?? 0;
+          const optsAttempts = (bullJob.opts && bullJob.opts.attempts) ?? null;
+          if (optsAttempts != null) finalAttempt = attemptsMade >= optsAttempts;
+        }
+      } catch (e) {
+        // best-effort: if we can't fetch bull job, leave finalAttempt=false
+      }
+
+      jobsFailedTotal.inc({
+        type,
+        finalAttempt: finalAttempt ? "true" : "false",
+      });
+      console.log(
+        `[sync] job ${jobId} → failed (finalAttempt=${finalAttempt})`,
+      );
     } catch (err) {
       console.error(`[sync] failed handler error for ${jobId}: ${err.message}`);
     }
@@ -92,10 +119,10 @@ export function startJobSync() {
   if (started) return;
   started = true;
 
-  // Attach to the three queues by their queue names
-  const qImage = attachListeners("image-processing");
-  const qReport = attachListeners("report-generation");
-  const qEmail = attachListeners("email-dispatch");
+  // Attach to the three queues with their types
+  const qImage = attachListeners(imageQueue, "image");
+  const qReport = attachListeners(reportQueue, "report");
+  const qEmail = attachListeners(emailQueue, "email");
 
   return { qImage, qReport, qEmail };
 }
