@@ -1,3 +1,4 @@
+import "./config/env.js";
 import app from "./api/app.js";
 import { connectDatabase } from "./config/database.js";
 import { startJobSync } from "./utils/jobSync.js";

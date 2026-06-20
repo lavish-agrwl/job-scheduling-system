@@ -1,6 +1,11 @@
 import dotenv from "dotenv";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
 
-dotenv.config();
+const currentDir = dirname(fileURLToPath(import.meta.url));
+const envPath = resolve(currentDir, "../../.env");
+
+dotenv.config({ path: envPath });
 
 const requiredVariables = [
   "REDIS_HOST",
@@ -15,7 +20,7 @@ const missingVariables = requiredVariables.filter((name) => !process.env[name]);
 if (missingVariables.length > 0) {
   throw new Error(
     `Missing required environment variable(s): ${missingVariables.join(", ")}. ` +
-      "Define them in your .env file.",
+      `Define them in ${envPath} or export them in the shell before starting the app.`,
   );
 }
 

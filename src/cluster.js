@@ -1,10 +1,13 @@
+import "./config/env.js";
 import cluster from "node:cluster";
 import os from "node:os";
 
 if (cluster.isPrimary) {
   const count = Math.min(os.cpus().length, 4);
 
-  console.log(`Primary process ${process.pid} started. Forking ${count} workers.`);
+  console.log(
+    `Primary process ${process.pid} started. Forking ${count} workers.`,
+  );
 
   for (let i = 0; i < count; i += 1) {
     cluster.fork();
