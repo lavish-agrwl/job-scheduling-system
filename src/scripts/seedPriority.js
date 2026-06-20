@@ -34,13 +34,16 @@ const submissions = [
 ];
 
 for (const submission of submissions) {
-  const job = await submitJob(
+  const { job, isDuplicate } = await submitJob(
     submission.type,
     submission.payload,
     submission.options,
   );
 
-  console.log(`Submitted job ${job.id} with priority ${submission.options.priority}`);
+  const idDisplay = job && job.id ? job.id : "<existing>";
+  console.log(
+    `Submitted job ${idDisplay} with priority ${submission.options.priority} (isDuplicate=${isDuplicate})`,
+  );
 }
 
 setTimeout(() => {
