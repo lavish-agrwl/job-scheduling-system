@@ -7,6 +7,11 @@ import { setupGracefulShutdown } from "../utils/gracefulShutdown.js";
 const reportWorker = new Worker("report-generation", reportProcessor, {
   concurrency: 1,
   connection: redisConnection,
+  // If a worker crashes while processing, Redis lock expires after lockDuration ms.
+  // BullMQ then re-queues the job. Without this, crashed jobs stay in 'active' state forever.
+  lockDuration: 30000,
+  stalledInterval: 15000,
+  maxStalledCount: 2,
 });
 
 setupGracefulShutdown(reportWorker, "report-generation");
@@ -17,6 +22,10 @@ reportWorker.on("completed", (job, returnvalue) => {
 
 reportWorker.on("failed", (job, error) => {
   console.error(`[report] Worker failed job ${job?.id}: ${error.message}`);
+});
+
+reportWorker.on("stalled", (jobId) => {
+  console.warn(`[report-generation] Job ${jobId} stalled — will be re-queued`);
 });
 
 console.log("Report worker started");
