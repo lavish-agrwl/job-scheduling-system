@@ -6,7 +6,8 @@
   "private": true,
   "scripts": {
     "seed": "node src/scripts/seedJobs.js",
-    "start:cluster": "node src/cluster.js"
+    "start:cluster": "node src/cluster.js",
+    "load-test": "node src/scripts/loadTest.js"
   },
   "dependencies": {
     "@bull-board/api": "^8.0.1",
