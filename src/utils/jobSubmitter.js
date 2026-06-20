@@ -1,5 +1,6 @@
 import { emailQueue, imageQueue, reportQueue } from "../queues/index.js";
 import { createHash } from "node:crypto";
+import Job from "../models/Job.js";
 
 const queuesByType = {
   image: imageQueue,
@@ -23,10 +24,29 @@ export async function submitJob(type, payload, options = {}) {
         .digest("hex")
         .slice(0, 16);
 
+  // Ensure a Job document exists before adding to BullMQ. Use $setOnInsert
+  // to avoid overwriting submittedAt on retries.
+  const priority = options.priority ?? 10;
+
+  await Job.findOneAndUpdate(
+    { jobId },
+    {
+      $setOnInsert: {
+        jobId,
+        type,
+        payload,
+        priority,
+        status: "waiting",
+        submittedAt: new Date(),
+      },
+    },
+    { upsert: true, new: true },
+  );
+
   // Pass jobId to BullMQ. BullMQ will silently ignore duplicate submissions
   // with the same jobId (it returns null when the job already exists).
   const job = await queue.add(type, payload, {
-    priority: options.priority ?? 10,
+    priority,
     delay: options.delay ?? 0,
     jobId,
   });
