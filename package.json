@@ -5,7 +5,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "seed": "node src/scripts/seedJobs.js"
+    "seed": "node src/scripts/seedJobs.js",
+    "start:cluster": "node src/cluster.js"
   },
   "dependencies": {
     "bullmq": "^5.0.0",
