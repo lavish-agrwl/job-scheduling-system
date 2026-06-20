@@ -27,6 +27,8 @@ export async function submitJob(type, payload, options = {}) {
   // Ensure a Job document exists before adding to BullMQ. Use $setOnInsert
   // to avoid overwriting submittedAt on retries.
   const priority = options.priority ?? 10;
+  const attempts = options.attempts;
+  const backoff = options.backoff;
 
   await Job.findOneAndUpdate(
     { jobId },
@@ -49,6 +51,8 @@ export async function submitJob(type, payload, options = {}) {
     priority,
     delay: options.delay ?? 0,
     jobId,
+    ...(attempts !== undefined ? { attempts } : {}),
+    ...(backoff !== undefined ? { backoff } : {}),
   });
 
   const isDuplicate = !job || !job.id;
