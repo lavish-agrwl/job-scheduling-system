@@ -43,7 +43,7 @@ PORT=3000
 │                      API Server                             │
 │  (Express + job submission, status queries, cancellation)   │
 └────────────┬──────────────────────────────────────────────┬─┘
-             │                                               │
+             │                                              │
       ┌──────▼──────┐                              ┌────────▼──────┐
       │  BullMQ     │                              │  MongoDB      │
       │  Queues     │◄──────Job Sync────────────►  │  Job Records  │
@@ -60,7 +60,7 @@ PORT=3000
 
 ### Components
 
-- **API Server** (`src/server.js`): Express app serving REST endpoints, admin UI, metrics
+- **API Server** (`src/server.js`): Express app serving R EST endpoints, admin UI, metrics
 - **Cluster Workers** (`src/cluster.js`): Worker pool processing jobs from queues
 - **Job Sync** (`src/utils/jobSync.js`): Listens to BullMQ events, keeps MongoDB in sync
 - **Idempotent Submission** (`src/utils/jobSubmitter.js`): Deterministic job IDs prevent duplicates
