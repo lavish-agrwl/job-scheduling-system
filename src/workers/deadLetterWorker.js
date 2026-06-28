@@ -10,19 +10,22 @@ for (const queueName of queueNames) {
     connection: redisSubscriber.duplicate(),
   });
 
-  queueEvents.on("failed", async (event) => {
-    if (Number(event.attemptsMade) !== 3) {
-      return;
+  queueEvents.on("retries-exhausted", async (event) => {
+    try {
+      await deadLetterQueue.add("dead-letter", {
+        originalQueue: queueName,
+        jobId: event.jobId,
+        attemptsMade: Number(event.attemptsMade),
+        reason: "Retries exhausted",
+      });
+
+      console.log(
+        `[DLQ] Job ${event.jobId} from ${queueName} moved to dead-letter queue after ${event.attemptsMade} attempts`,
+      );
+    } catch (error) {
+      console.error(
+        `[DLQ] Failed to move job ${event.jobId} from ${queueName} to dead-letter queue: ${error.message}`,
+      );
     }
-
-    await deadLetterQueue.add("dead-letter", {
-      originalQueue: queueName,
-      jobId: event.jobId,
-      reason: event.failedReason,
-    });
-
-    console.log(
-      `[DLQ] Job ${event.jobId} from ${queueName} moved to dead-letter queue`,
-    );
   });
 }

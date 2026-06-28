@@ -3,6 +3,8 @@ import cluster from "node:cluster";
 import os from "node:os";
 
 if (cluster.isPrimary) {
+  await import("./workers/deadLetterWorker.js");
+
   const count = Math.min(os.cpus().length, 4);
 
   console.log(
