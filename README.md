@@ -2,6 +2,53 @@
 
 A production-grade distributed job queue system built with **BullMQ**, **Node.js**, **MongoDB**, and **Redis**. Supports idempotent job submission, graceful retries, job status tracking, metrics collection, and a web-based admin UI.
 
+# Table of Contents
+- [Job Scheduling System](#job-scheduling-system)
+- [Table of Contents](#table-of-contents)
+  - [Quick Start](#quick-start)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+    - [Environment Setup](#environment-setup)
+  - [System Architecture](#system-architecture)
+    - [Components](#components)
+  - [Running the System](#running-the-system)
+    - [Terminal 1: Start Worker Cluster](#terminal-1-start-worker-cluster)
+    - [Terminal 2: Start API Server](#terminal-2-start-api-server)
+    - [Terminal 3: Run Load Test (Optional)](#terminal-3-run-load-test-optional)
+    - [Terminal 4: Run Chaos Tests (Optional)](#terminal-4-run-chaos-tests-optional)
+    - [Terminal 5: Seed Example Jobs (Optional)](#terminal-5-seed-example-jobs-optional)
+  - [API Endpoints](#api-endpoints)
+    - [POST `/api/jobs`](#post-apijobs)
+    - [GET `/api/jobs/:id`](#get-apijobsid)
+    - [GET `/api/jobs?status=completed&type=image&page=1&limit=20`](#get-apijobsstatuscompletedtypeimagepage1limit20)
+    - [DELETE `/api/jobs/:id`](#delete-apijobsid)
+  - [Monitoring](#monitoring)
+    - [Admin UI](#admin-ui)
+    - [Metrics (Prometheus)](#metrics-prometheus)
+  - [Job Types](#job-types)
+    - [Image Processing](#image-processing)
+    - [Report Generation](#report-generation)
+    - [Email Dispatch](#email-dispatch)
+  - [Idempotency](#idempotency)
+  - [Database Schema](#database-schema)
+    - [Job Document (MongoDB)](#job-document-mongodb)
+  - [Testing](#testing)
+    - [Load Test](#load-test)
+    - [Chaos Test](#chaos-test)
+  - [Graceful Shutdown](#graceful-shutdown)
+  - [Development](#development)
+    - [Run with Hot Reload](#run-with-hot-reload)
+    - [Lint \& Format](#lint--format)
+    - [Environment Variables](#environment-variables)
+  - [Troubleshooting](#troubleshooting)
+    - ["MongoDB not connected"](#mongodb-not-connected)
+    - ["Redis connection refused"](#redis-connection-refused)
+    - ["Missing required environment variable(s)"](#missing-required-environment-variables)
+    - [Jobs stuck in "active" status](#jobs-stuck-in-active-status)
+  - [Production Checklist](#production-checklist)
+  - [License](#license)
+
+
 ## Quick Start
 
 ### Prerequisites
