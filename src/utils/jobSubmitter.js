@@ -30,6 +30,8 @@ export async function submitJob(type, payload, options = {}) {
   const attempts = options.attempts;
   const backoff = options.backoff;
 
+  const existingJob = await Job.findOne({ jobId }).lean().exec();
+
   await Job.findOneAndUpdate(
     { jobId },
     {
@@ -46,7 +48,7 @@ export async function submitJob(type, payload, options = {}) {
   );
 
   // Pass jobId to BullMQ. BullMQ will silently ignore duplicate submissions
-  // with the same jobId (it returns null when the job already exists).
+  // with the same jobId.
   const job = await queue.add(type, payload, {
     priority,
     delay: options.delay ?? 0,
@@ -55,7 +57,7 @@ export async function submitJob(type, payload, options = {}) {
     ...(backoff !== undefined ? { backoff } : {}),
   });
 
-  const isDuplicate = !job || !job.id;
+  const isDuplicate = Boolean(existingJob);
 
   return { job, isDuplicate };
 }
